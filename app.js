@@ -4,14 +4,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const errorController = require('./controllers/error');
-const sequelize = require('./util/database')
-
-const Product = require("./models/product")
-const User = require("./models/user")
-const Cart = require('./models/cart');
-const CartItem = require('./models/cart-item');
-const Order = require('./models/order');
-const OrderItem = require('./models/order-item');
+const mongoConnect = require('./util/database').mongoConnect
+const User = require('./models/user')
 
 const app = express();
 
@@ -26,9 +20,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-  User.findByPk(1)
+  User.findById("XXX")
   .then((user => {
-    req.user = user; //Meio que global
+    req.user = new User(user.name, user.email, user.cart, user._id)
     next() 
   }))
   .catch(e => console.log(e))
@@ -39,37 +33,6 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-Product.belongsTo(User, {constraints: true, onDelete: 'CASCADE'})
-User.hasMany(Product)
-User.hasOne(Cart)
-Cart.belongsTo(User)
-Cart.belongsToMany(Product, {through: CartItem})
-Product.belongsToMany(Cart, {through: CartItem})
-User.hasMany(Order)
-Order.belongsTo(User)
-Order.belongsToMany(Product, {through: OrderItem})
-Product.belongsToMany(Cart, {through: OrderItem})
-
-
-
-//Cria as tabelas se ela n existirem
-sequelize
-.sync()
-// .sync({force: true}) //Reescreve as tabelas todas as vezes 
-.then(result => {
-  return User.findByPk(1)
+mongoConnect(() => {
+  app.listen(3000)
 })
-.then(user => {
-  if(!user){
-    return User.create({name: "Ola", email: "ola@mail.cocm"})
-  }
-  return user
-})
-.then((user) => {
-  user.createCart();
-})
-.then(() => {
-  app.listen(3000);
-})
-.catch(err => console.log(err))
-
