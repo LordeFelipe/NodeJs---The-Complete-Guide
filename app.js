@@ -2,9 +2,9 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const errorController = require('./controllers/error');
-const mongoConnect = require('./util/database').mongoConnect
 const User = require('./models/user')
 
 const app = express();
@@ -20,9 +20,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-  User.findById("XXX")
+  User.findOne()
   .then((user => {
-    req.user = new User(user.name, user.email, user.cart, user._id)
+    req.user = user
     next() 
   }))
   .catch(e => console.log(e))
@@ -33,6 +33,20 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
+mongoose.connect('mongodb+srv://lordefelipe:100499@cluster0.fp2oy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+.then(() => {
+  User.findOne().then(user => {
+    if(!user) {
+      const user = new User({
+        name: 'Oi',
+        email: 'ola',
+        cart: {
+          items: []
+        }
+      })
+      user.save()
+    }
+  })
   app.listen(3000)
 })
+.catch(e => console.log(e))
