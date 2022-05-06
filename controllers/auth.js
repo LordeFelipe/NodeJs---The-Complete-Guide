@@ -1,6 +1,15 @@
 const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
+const mailjetTransport = require('nodemailer-mailjet-transport')
 
 const User = require('../models/user');
+
+const transporter = nodemailer.createTransport(mailjetTransport({
+  auth: {
+    apiKey: 'key',
+    apiSecret: 'secret'
+  }
+}))
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash('error')
@@ -80,6 +89,12 @@ exports.postSignup = (req, res, next) => {
     })
     .then(() => {
       res.redirect('/login')
+      return transporter.sendMail({
+        to: email,
+        from: 'shop@node-complete.com',
+        subject: 'Signup Deu bom!',
+        html: '<h1>Deu certo!</h1>'
+      })
     })
   })
   .catch(e => console.log(e))
