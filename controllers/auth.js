@@ -94,7 +94,11 @@ exports.postLogin = (req, res, next) => {
         }
       })
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      const error = new Error(err)
+      error.httpStatus = 500
+      return next(error)
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -130,6 +134,7 @@ exports.postSignup = (req, res, next) => {
     //   html: '<h1>Deu certo!</h1>'
     // })
   })
+  
 };
 
 exports.postLogout = (req, res, next) => {
